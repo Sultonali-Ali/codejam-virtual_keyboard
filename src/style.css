@@ -17,6 +17,13 @@ body {
     outline: none;
 }
 
+.text {
+    font-size: 14px;
+    color: #ffffff;
+    font-weight: 700;
+    text-align: center;
+}
+
 .keyboard {
     position: fixed;
     bottom: 0;
@@ -58,11 +65,6 @@ body {
 
     box-shadow: 0 0 10px darkblue;
 }
-
-/* .keyboard__key:active {
-    border-radius: 40%;
-    background-color: royalblue;
-} */
 
 .keyboard__key--active {
     border-radius: 40%;

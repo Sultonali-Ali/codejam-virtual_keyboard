@@ -488,6 +488,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
   document.body.appendChild(textarea);
+  const text = document.createElement('pre');
+  text.classList.add('text');
+  text.textContent = 'Переключение языка:\n'
+    + 'Виртуальная клавиатура: Win\n'
+    + 'Реальная клавиатура: Shift + Alt\n'
+    + 'для Windows OS\n'
+    + 'для того чтобы появился клавиатура кликните к полю';
+  document.body.appendChild(text);
 
   const keyboard = new Keyboard();
   keyboard.init();
