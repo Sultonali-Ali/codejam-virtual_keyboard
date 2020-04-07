@@ -9,6 +9,9 @@ class Keyboard {
     };
     this.properties = {
       capsLock: false,
+      shift: false,
+      alt: false,
+      ctrl: false,
     };
     this.keyLayout = {
       eng: [
@@ -131,7 +134,7 @@ class Keyboard {
     this.elements.keysContainer.addEventListener('click', (event) => {
       if (event.target.classList.contains('keyboard__key')) {
         event.target.classList.add('keyboard__key--active');
-        this.addValueToInput(event.target.textContent);
+        this.addValueToInput(event.target);
         setTimeout(() => {
           event.target.classList.remove('keyboard__key--active');
         }, 300);
@@ -139,23 +142,20 @@ class Keyboard {
     });
   }
 
-  addValueToInput(currentValue) {
-    switch (currentValue) {
+  addValueToInput(target) {
+    switch (target.textContent) {
       case 'Backspace':
         this.input.value = this.input.value.substring(0, this.input.value.length - 1);
         break;
 
       case 'CapsLock':
         this.triggerCapsLock();
+        if (this.properties.capsLock) {
+          target.classList.add('keyboard__key--highlight');
+        } else {
+          target.classList.remove('keyboard__key--highlight');
+        }
         this.elements.keys.forEach((key) => {
-          if (key.textContent === 'CapsLock') {
-            if (this.properties.capsLock) {
-              key.classList.add('keyboard__key--highlight');
-            } else {
-              key.classList.remove('keyboard__key--highlight');
-            }
-          }
-
           if (key.textContent.length === 1) {
             if (this.properties.capsLock) {
               key.textContent = key.textContent.toUpperCase();
@@ -167,23 +167,20 @@ class Keyboard {
 
         break;
 
-      // case 'Enter':
-      //   keyElement.classList.add('keyboard__key--wide');
-      //   keyElement.textContent = 'Enter';
+      case 'Enter':
+        this.input.value += '\n';
 
-      //   break;
+        break;
 
-      // case 'Space':
-      //   keyElement.classList.add('keyboard__key--extra-wide');
-      //   keyElement.textContent = 'Space';
+      case 'Space':
+        this.input.value += ' ';
 
-      //   break;
+        break;
 
-      // case 'Tab':
-      //   keyElement.classList.add('keyboard__key--wide');
-      //   keyElement.textContent = 'Tab';
+      case 'Tab':
+        this.input.value += '    ';
 
-      //   break;
+        break;
 
       // case 'Shift':
       //   keyElement.classList.add('keyboard__key--wide');
@@ -191,11 +188,11 @@ class Keyboard {
 
       //   break;
 
-      // case 'Ctrl':
-      //   keyElement.classList.add('keyboard__key--wide');
-      //   keyElement.textContent = 'Ctrl';
+      case 'Ctrl':
+        keyElement.classList.add('keyboard__key--wide');
+        keyElement.textContent = 'Ctrl';
 
-      //   break;
+        break;
 
       // case 'Alt Gr':
       //   keyElement.classList.add('keyboard__key--wide');
