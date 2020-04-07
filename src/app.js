@@ -8,9 +8,10 @@ class Keyboard {
       keys: [],
     };
     this.properties = {
-      capsLock: false,
+      capslock: false,
       shift: false,
       alt: false,
+      'alt gr': false,
       ctrl: false,
     };
     this.keyLayout = {
@@ -19,7 +20,21 @@ class Keyboard {
         'Tab', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 'Del', 'br',
         'CapsLock', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '\\', 'Enter', 'br',
         'Shift', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 'Shift', '&#8593;', 'br',
-        'Ctrl', 'Win', 'Alt', 'Space', 'Alt Gr', 'Ctrl', '&#8592;', '&#8595;', '&#8594;', 'br',
+        'Ctrl', 'Win', 'Alt', 'Space', 'AltGr', 'Ctrl', '&#8592;', '&#8595;', '&#8594;', 'br',
+      ],
+      ru: [
+        'ё', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 'Backspace', 'br',
+        'Tab', 'й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ', 'Del', 'br',
+        'CapsLock', 'ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э', '\\', 'Enter', 'br',
+        'Shift', 'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю', '.', 'Shift', '&#8593;', 'br',
+        'Ctrl', 'Win', 'Alt', 'Space', 'AltGr', 'Ctrl', '&#8592;', '&#8595;', '&#8594;', 'br',
+      ],
+      codes: [
+        192, 49, 50, 51, 52, 53, 54, 55, 56, 57, 48, 189, 187, 8,
+        9, 81, 87, 69, 82, 84, 89, 85, 73, 79, 80, 219, 221, 46,
+        20, 65, 83, 68, 70, 71, 72, 74, 75, 76, 186, 222, 220, 13,
+        16, 90, 88, 67, 86, 66, 78, 77, 188, 190, 191, 16, 38,
+        17, 91, 18, 32, 18, 17, 37, 40, 39,
       ],
     };
   }
@@ -34,20 +49,26 @@ class Keyboard {
     this.elements.keysContainer.classList.add('keyboard__keys');
     this.input = document.querySelector('#textarea');
     this.virtualKeyClickHandler();
-    this.elements.keysContainer.appendChild(this.createKeys());
-
+    if (!localStorage.getItem('lang')) {
+      this.elements.keysContainer.appendChild(this.createKeys('eng'));
+      localStorage.setItem('lang', 'eng');
+    } else {
+      this.elements.keysContainer.appendChild(this.createKeys(localStorage.getItem('lang')));
+    }
     this.elements.keys = this.elements.keysContainer.querySelectorAll('.keyboard__key');
-
 
     // Add to DOM
     this.elements.main.appendChild(this.elements.keysContainer);
     document.body.appendChild(this.elements.main);
+
+    // Add real key press handler
+    this.realKeyPressHandler();
   }
 
-  createKeys() {
+  createKeys(lang) {
     const fragment = document.createDocumentFragment();
-
-    this.keyLayout.eng.forEach((key) => {
+    let codesCount = 0;
+    this.keyLayout[lang].forEach((key) => {
       if (key === 'br') {
         fragment.appendChild(document.createElement('br'));
       } else {
@@ -56,6 +77,8 @@ class Keyboard {
         // Add attributes/classes
         keyElement.setAttribute('type', 'button');
         keyElement.classList.add('keyboard__key');
+        keyElement.setAttribute('data', this.keyLayout.codes[codesCount]);
+        codesCount += 1;
 
         switch (key) {
           case 'Backspace':
@@ -100,9 +123,9 @@ class Keyboard {
 
             break;
 
-          case 'Alt Gr':
+          case 'AltGr':
             keyElement.classList.add('keyboard__key--wide');
-            keyElement.textContent = 'Alt Gr';
+            keyElement.textContent = 'AltGr';
 
             break;
 
@@ -118,8 +141,13 @@ class Keyboard {
 
             break;
 
+          case 'Win':
+            keyElement.textContent = 'Win';
+
+            break;
+
           default:
-            keyElement.classList.add('keyboard__key');
+            // keyElement.classList.add('keyboard__key');
             keyElement.innerHTML = key.toLowerCase();
 
             break;
@@ -143,21 +171,18 @@ class Keyboard {
   }
 
   addValueToInput(target) {
-    switch (target.textContent) {
+    const currentValue = target.textContent;
+    switch (currentValue) {
       case 'Backspace':
         this.input.value = this.input.value.substring(0, this.input.value.length - 1);
         break;
 
       case 'CapsLock':
-        this.triggerCapsLock();
-        if (this.properties.capsLock) {
-          target.classList.add('keyboard__key--highlight');
-        } else {
-          target.classList.remove('keyboard__key--highlight');
-        }
-        this.elements.keys.forEach((key) => {
+        this.triggerSpecialKey(target);
+        this.elements.keys.forEach((keyItem) => {
+          const key = keyItem;
           if (key.textContent.length === 1) {
-            if (this.properties.capsLock) {
+            if (this.properties.capslock) {
               key.textContent = key.textContent.toUpperCase();
             } else {
               key.textContent = key.textContent.toLowerCase();
@@ -182,35 +207,49 @@ class Keyboard {
 
         break;
 
-      // case 'Shift':
-      //   keyElement.classList.add('keyboard__key--wide');
-      //   keyElement.textContent = 'Shift';
-
-      //   break;
-
-      case 'Ctrl':
-        keyElement.classList.add('keyboard__key--wide');
-        keyElement.textContent = 'Ctrl';
+      case 'Shift':
+        this.triggerSpecialKey(target);
 
         break;
 
-      // case 'Alt Gr':
-      //   keyElement.classList.add('keyboard__key--wide');
-      //   keyElement.textContent = 'Alt Gr';
+      case 'Ctrl':
+        this.triggerSpecialKey(target);
 
-      //   break;
+        break;
 
-      // case 'Alt':
-      //   keyElement.classList.add('keyboard__key--wide');
-      //   keyElement.textContent = 'Alt';
+      case 'AltGr':
+        this.triggerSpecialKey(target);
 
-      //   break;
+        break;
 
-      // case 'Del':
-      //   keyElement.classList.add('keyboard__key--wide');
-      //   keyElement.textContent = 'Del';
+      case 'Alt':
+        this.triggerSpecialKey(target);
 
-      //   break;
+        break;
+
+      case 'Del':
+        if (this.input.selectionStart !== 0) {
+          this.input.value = this.input.value.substring(0, this.input.selectionStart)
+            + this.input.value.substr(this.input.selectionStart + 1, this.input.value.length);
+        }
+        break;
+
+      case 'Win':
+        if (localStorage.getItem('lang') === 'eng') {
+          localStorage.setItem('lang', 'ru');
+          document.querySelector('.keyboard__keys').innerHTML = '';
+          document.querySelector('.keyboard__keys').appendChild(this.createKeys('ru'));
+          this.elements.keys = document.querySelectorAll('.keyboard__key');
+          this.properties.capslock = false;
+        } else {
+          localStorage.setItem('lang', 'eng');
+          document.querySelector('.keyboard__keys').innerHTML = '';
+          document.querySelector('.keyboard__keys').appendChild(this.createKeys('eng'));
+          this.elements.keys = document.querySelectorAll('.keyboard__key');
+          this.properties.capslock = false;
+        }
+
+        break;
 
       default:
         this.input.value += currentValue;
@@ -219,8 +258,131 @@ class Keyboard {
     }
   }
 
-  triggerCapsLock() {
-    this.properties.capsLock = !this.properties.capsLock;
+  addValueToInputRealKey(target) {
+    const currentValue = target.textContent;
+    switch (currentValue) {
+      case 'Backspace':
+        this.input.value = this.input.value.substring(0, this.input.value.length - 1);
+        break;
+
+      case 'CapsLock':
+        this.triggerSpecialKey(target);
+        this.elements.keys.forEach((keyItem) => {
+          const key = keyItem;
+          if (key.textContent.length === 1) {
+            if (this.properties.capslock) {
+              key.textContent = key.textContent.toUpperCase();
+            } else {
+              key.textContent = key.textContent.toLowerCase();
+            }
+          }
+        });
+
+        break;
+
+      case 'Enter':
+        this.input.value += '\n';
+
+        break;
+
+      case 'Space':
+        this.input.value += ' ';
+
+        break;
+
+      case 'Tab':
+        this.input.value += '    ';
+
+        break;
+
+      case 'Shift':
+        this.triggerSpecialKey(target);
+
+        break;
+
+      case 'Ctrl':
+        this.triggerSpecialKey(target);
+
+        break;
+
+      case 'AltGr':
+        this.triggerSpecialKey(target);
+
+        break;
+
+      case 'Alt':
+        this.triggerSpecialKey(target);
+
+        break;
+
+      case 'Del':
+        if (this.input.selectionStart !== 0) {
+          this.input.value = this.input.value.substring(0, this.input.selectionStart)
+            + this.input.value.substr(this.input.selectionStart + 1, this.input.value.length);
+        }
+        break;
+
+      default:
+        this.input.value += currentValue;
+
+        break;
+    }
+  }
+
+  triggerSpecialKey(targetKey) {
+    const key = targetKey.textContent.toLowerCase();
+    if (key === 'ctrl' && this.properties.ctrl) {
+      this.elements.keys.forEach((element) => {
+        if (element.textContent.toLowerCase() === key) {
+          element.classList.remove('keyboard__key--highlight');
+        }
+      });
+    }
+
+    if (key === 'shift' && this.properties.shift) {
+      this.elements.keys.forEach((element) => {
+        if (element.textContent.toLowerCase() === key) {
+          element.classList.remove('keyboard__key--highlight');
+        }
+      });
+    }
+
+    this.properties[key] = !this.properties[key];
+    if (this.properties[key]) {
+      targetKey.classList.add('keyboard__key--highlight');
+    } else {
+      targetKey.classList.remove('keyboard__key--highlight');
+    }
+  }
+
+  realKeyPressHandler() {
+    this.input.addEventListener('keydown', (event) => {
+      event.preventDefault();
+
+      if (event.shiftKey && event.altKey) {
+        if (localStorage.getItem('lang') === 'eng') {
+          localStorage.setItem('lang', 'ru');
+          document.querySelector('.keyboard__keys').innerHTML = '';
+          document.querySelector('.keyboard__keys').appendChild(this.createKeys('ru'));
+          this.elements.keys = document.querySelectorAll('.keyboard__key');
+          this.properties.capslock = false;
+        } else {
+          localStorage.setItem('lang', 'eng');
+          document.querySelector('.keyboard__keys').innerHTML = '';
+          document.querySelector('.keyboard__keys').appendChild(this.createKeys('eng'));
+          this.elements.keys = document.querySelectorAll('.keyboard__key');
+          this.properties.capslock = false;
+        }
+      } else {
+        const element = document.querySelector(`.keyboard__key[data="${event.keyCode}"]`);
+        element.classList.add('keyboard__key--active');
+        this.addValueToInputRealKey(element);
+        setTimeout(() => {
+          element.classList.remove('keyboard__key--active');
+        }, 300);
+      }
+
+    });
   }
 }
 
@@ -232,6 +394,8 @@ window.addEventListener('DOMContentLoaded', () => {
   textarea.addEventListener('focus', () => {
     document.querySelector('.keyboard').classList.remove('keyboard--hidden');
   });
+
+  const list = document.createElement('ul');
 
   document.body.appendChild(textarea);
 
