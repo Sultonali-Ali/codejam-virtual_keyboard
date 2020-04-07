@@ -36,6 +36,50 @@ class Keyboard {
         16, 90, 88, 67, 86, 66, 78, 77, 188, 190, 191, 16, 38,
         17, 91, 18, 32, 18, 17, 37, 40, 39,
       ],
+      engShift: {
+        192: '~',
+        49: '!',
+        50: '@',
+        51: '#',
+        52: '$',
+        53: '%',
+        54: '^',
+        55: '&',
+        56: '*',
+        57: '(',
+        48: ')',
+        189: '_',
+        187: '+',
+      },
+      ruShift: {
+        192: 'ё',
+        49: '!',
+        50: '"',
+        51: '№',
+        52: ';',
+        53: '%',
+        54: ':',
+        55: '?',
+        56: '*',
+        57: '(',
+        48: ')',
+        189: '_',
+        187: '+',
+      },
+      numbShift: {
+        49: '1',
+        50: '2',
+        51: '3',
+        52: '4',
+        53: '5',
+        54: '6',
+        55: '7',
+        56: '8',
+        57: '9',
+        48: '0',
+        189: '-',
+        187: '=',
+      },
     };
   }
 
@@ -252,6 +296,9 @@ class Keyboard {
         break;
 
       default:
+        if (this.properties.shift) {
+          this.triggerShiftKey(true);
+        }
         this.input.value += currentValue;
 
         break;
@@ -331,6 +378,7 @@ class Keyboard {
 
   triggerSpecialKey(targetKey) {
     const key = targetKey.textContent.toLowerCase();
+    this.properties[key] = !this.properties[key];
     if (key === 'ctrl' && this.properties.ctrl) {
       this.elements.keys.forEach((element) => {
         if (element.textContent.toLowerCase() === key) {
@@ -340,14 +388,33 @@ class Keyboard {
     }
 
     if (key === 'shift' && this.properties.shift) {
-      this.elements.keys.forEach((element) => {
+      this.elements.keys.forEach((elementK) => {
+        const element = elementK;
+        if (this.keyLayout.engShift[element.getAttribute('data')] && localStorage.getItem('lang') === 'eng') {
+          element.textContent = this.keyLayout.engShift[element.getAttribute('data')];
+        }
+        if (this.keyLayout.engShift[element.getAttribute('data')] && localStorage.getItem('lang') === 'ru') {
+          element.textContent = this.keyLayout.ruShift[element.getAttribute('data')];
+        }
+        if (element.textContent.length === 1) {
+          element.textContent = element.textContent.toUpperCase();
+        }
         if (element.textContent.toLowerCase() === key) {
           element.classList.remove('keyboard__key--highlight');
         }
       });
     }
 
-    this.properties[key] = !this.properties[key];
+    if (key === 'shift' && !this.properties.shift) {
+      this.elements.keys.forEach((elementK) => {
+        const element = elementK;
+        if (element.textContent.length === 1) {
+          element.textContent = element.textContent.toLowerCase();
+        }
+      });
+      this.triggerShiftKey(false);
+    }
+
     if (this.properties[key]) {
       targetKey.classList.add('keyboard__key--highlight');
     } else {
@@ -355,8 +422,32 @@ class Keyboard {
     }
   }
 
+  triggerShiftKey(check) {
+    if (check) {
+      this.properties.shift = !this.properties.shift;
+    }
+    this.elements.keys.forEach((elementK) => {
+      const element = elementK;
+      if (this.keyLayout.engShift[element.getAttribute('data')]) {
+        if (element.getAttribute('data') === '192') {
+          element.textContent = (localStorage.getItem('lang') === 'eng') ? '`' : 'ё';
+        } else {
+          element.textContent = this.keyLayout.numbShift[element.getAttribute('data')];
+        }
+      }
+      if (element.textContent.length === 1) {
+        element.textContent = element.textContent.toLowerCase();
+      }
+      if (element.textContent.toLowerCase() === 'shift') {
+        element.classList.remove('keyboard__key--highlight');
+      }
+    });
+  }
+
   realKeyPressHandler() {
-    this.input.addEventListener('keydown', (event) => {
+    window.addEventListener('keydown', (event) => {
+      const keys = [];
+      keys.push(event.key);
       event.preventDefault();
 
       if (event.shiftKey && event.altKey) {
@@ -374,18 +465,18 @@ class Keyboard {
           this.properties.capslock = false;
         }
       } else {
-        const element = document.querySelector(`.keyboard__key[data="${event.keyCode}"]`);
+        const element = (event.code === 'AltRight' || event.code === 'ControlRight' || event.code === 'ShiftRight')
+          ? document.querySelectorAll(`.keyboard__key[data="${event.keyCode}"]`)[1]
+          : document.querySelector(`.keyboard__key[data="${event.keyCode}"]`);
         element.classList.add('keyboard__key--active');
         this.addValueToInputRealKey(element);
         setTimeout(() => {
           element.classList.remove('keyboard__key--active');
         }, 300);
       }
-
     });
   }
 }
-
 
 window.addEventListener('DOMContentLoaded', () => {
   // Create input(textarea) and append to body
@@ -395,7 +486,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.keyboard').classList.remove('keyboard--hidden');
   });
 
-  const list = document.createElement('ul');
 
   document.body.appendChild(textarea);
 
