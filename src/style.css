@@ -1,27 +1,12 @@
 
-body {
-    background-color: dimgray;
-}
 
 #textarea {
     display: block;
     width: 80%;
-    height: 200px;
-    padding: 15px;
+    padding: 10px;
     margin: 50px auto 0;
-    background-color: grey;
 
     resize: none;
-
-    border-radius: 10px;
-    outline: none;
-}
-
-.text {
-    font-size: 14px;
-    color: #ffffff;
-    font-weight: 700;
-    text-align: center;
 }
 
 .keyboard {
@@ -30,16 +15,15 @@ body {
     left: 0;
     right: 0;
     width: 100%;
-    padding: 10px;
+    padding: 5px;
     box-sizing: border-box;
 
     background: rgba(0,0,0,0.5);
     user-select: none;
 
     transition: bottom 0.5s linear;
-    border-radius: 10px;
 
-    box-shadow: inset 0 0 20px darkorange, 0 0 15px lawngreen;
+    box-shadow: 0 0 20px darkorange;
 }
 
 .keyboard--hidden {
@@ -66,6 +50,11 @@ body {
     box-shadow: 0 0 10px darkblue;
 }
 
+/* .keyboard__key:active {
+    border-radius: 40%;
+    background-color: royalblue;
+} */
+
 .keyboard__key--active {
     border-radius: 40%;
     background-color: royalblue;
@@ -82,4 +71,3 @@ body {
 .keyboard__key--extra-wide {
     width: 20%;
 }
-
